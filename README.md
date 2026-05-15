@@ -21,6 +21,9 @@ experiences per second. Emergent behaviours appear over training:
 positioning, passing, goalkeeping, team coordination — none of it
 hand-coded.
 
+<img width="1036" height="496" alt="deeprl1" src="https://github.com/user-attachments/assets/045bafe4-32c7-4b7a-a8be-90314cecf586" />
+
+
 ### Scenario 2 — Drone Course (Quadrotor Flight)
 
 A 250mm X-config racing quadrotor learns to fly under realistic
@@ -31,6 +34,9 @@ altitude / yaw control → fly-to-waypoint → gate-racing courses**. Motor
 dynamics, aerodynamic drag, and rotor inertia are all simulated, so the
 learned controller has to deal with the same kind of disturbances a
 real quad would face.
+
+<img width="1039" height="496" alt="deeprl2" src="https://github.com/user-attachments/assets/2d670d0a-2dad-41d7-8329-3e9f373f6b36" />
+
 
 ## Capabilities
 
