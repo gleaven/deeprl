@@ -1,0 +1,10 @@
+# BYO override: skip the bundled Redis. Set REDIS_URL in .env and start with:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.byo.yml up -d
+
+services:
+  redis:
+    deploy:
+      replicas: 0
+  deeprl:
+    depends_on: !reset []

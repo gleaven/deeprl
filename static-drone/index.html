@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/deeprl/drone/">
+    <title>DRONERL // Autonomous Quadrotor Obstacle Course</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/dronerl.css?v=10">
+</head>
+<body>
+
+    <!-- Animated Background -->
+    <div class="cyber-bg">
+        <div class="grid-overlay"></div>
+        <div class="scan-line"></div>
+    </div>
+
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="brand">
+            <span class="status-dot" id="status-dot"></span>
+            <span class="logo-text" data-text="DRONERL">DRONERL</span>
+            <span class="subtitle">AUTONOMOUS QUADROTOR COURSE</span>
+        </div>
+        <div class="header-stats">
+            <div class="stat-badge">
+                <span class="stat-label">GEN</span>
+                <span class="stat-value" id="hdr-generation">0</span>
+            </div>
+            <div class="stat-badge">
+                <span class="stat-label">GATES</span>
+                <span class="stat-value" id="hdr-gates">0/0</span>
+            </div>
+            <div class="stat-badge">
+                <span class="stat-label">LEVEL</span>
+                <span class="stat-value" id="hdr-level">1</span>
+            </div>
+            <div class="gpu-inline-bar">
+                <span class="gpu-label"><span class="gpu-pulse"></span>GPU</span>
+                <div class="gpu-track"><div class="gpu-fill" id="gpu-bar"></div></div>
+                <span class="gpu-value" id="gpu-pct">--%</span>
+            </div>
+            <a href="/deeprl/" class="scenario-switch">SOCCER</a>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <main class="app-layout">
+
+        <!-- Left Panel: Training Controls -->
+        <aside class="panel panel-left">
+            <div class="panel-header">
+                <h2>TRAINING</h2>
+                <span class="panel-tag">PPO</span>
+            </div>
+
+            <div class="section">
+                <h3>CONTROLS</h3>
+                <div class="button-row">
+                    <button class="btn btn-primary" id="btn-start" title="Start or resume PPO training.">START</button>
+                    <button class="btn btn-danger" id="btn-stop" title="Pause training. Drone freezes.">PAUSE</button>
+                    <button class="btn btn-secondary" id="btn-reset" title="Reset to untrained policy.">RESET</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>CHECKPOINTS</h3>
+                <div class="checkpoint-save-row">
+                    <input type="text" id="ckpt-name" class="ckpt-input"
+                           placeholder="checkpoint name" maxlength="40">
+                    <button class="btn btn-primary btn-sm" id="btn-save-ckpt" title="Save current model.">SAVE</button>
+                </div>
+                <div class="checkpoint-list" id="checkpoint-list">
+                    <div class="ckpt-empty">No saved checkpoints</div>
+                </div>
+            </div>
+
+            <details class="section section-collapsible" id="human-demo-section">
+                <summary><h3>IMITATION LEARNING <span class="demo-status-tag" id="demo-status"></span></h3></summary>
+                <details class="demo-guide">
+                    <summary>How to teach the drone</summary>
+                    <ol>
+                        <li>Click <strong>FLY</strong> to take manual control</li>
+                        <li>Use keyboard to fly:
+                            <span class="key">W</span><span class="key">S</span> pitch,
+                            <span class="key">A</span><span class="key">D</span> roll,
+                            <span class="key">SPACE</span><span class="key">SHIFT</span> throttle,
+                            <span class="key">Q</span><span class="key">E</span> yaw</li>
+                        <li>Click <strong>REC</strong> to start recording your flight</li>
+                        <li>Fly the demonstration, then click <strong>STOP</strong></li>
+                        <li>Enter a name and click <strong>SAVE</strong></li>
+                        <li>Click <strong>FLY</strong> again to exit manual mode</li>
+                        <li>Click <strong>PRETRAIN</strong> to teach the model your demos</li>
+                        <li>After pretraining, click <strong>START</strong> &mdash; the model begins from your behavior and improves beyond it via RL</li>
+                    </ol>
+                </details>
+                <div class="button-row">
+                    <button class="btn btn-accent" id="btn-fly" title="Take manual control (WASD + Space/Shift + Q/E)">FLY</button>
+                    <button class="btn btn-danger" id="btn-rec" disabled title="Record demonstration">REC</button>
+                    <button class="btn btn-secondary" id="btn-demo-stop" disabled title="Stop recording">STOP</button>
+                </div>
+                <div class="key-hints" id="key-hints" style="display:none">
+                    <span class="key">W</span><span class="key">S</span> pitch
+                    <span class="key">A</span><span class="key">D</span> roll
+                    <span class="key">SPACE</span><span class="key">SHIFT</span> throttle
+                    <span class="key">Q</span><span class="key">E</span> yaw
+                </div>
+                <div class="demo-save-row" id="demo-save-row" style="display:none">
+                    <input type="text" id="demo-name" class="ckpt-input"
+                           placeholder="demo name" maxlength="40">
+                    <button class="btn btn-primary btn-sm" id="btn-demo-save">SAVE</button>
+                </div>
+                <div class="demo-list" id="demo-list">
+                    <div class="demo-empty">No saved demos</div>
+                </div>
+                <div class="button-row" style="margin-top: 6px;">
+                    <button class="btn btn-primary" id="btn-pretrain" disabled
+                            title="Pretrain model on saved demos (behavioral cloning)">PRETRAIN</button>
+                </div>
+                <div class="pretrain-progress" id="pretrain-progress" style="display:none">
+                    <div class="pretrain-bar-track"><div class="pretrain-bar-fill" id="pretrain-bar"></div></div>
+                    <span class="pretrain-info" id="pretrain-info">0/50</span>
+                </div>
+            </details>
+
+            <div class="section">
+                <h3>CURRICULUM <span class="level-name-tag" id="level-name">Hover (Calm)</span></h3>
+                <div class="level-grid">
+                    <button class="level-btn active" data-level="1" title="Hover (Calm)">1</button>
+                    <button class="level-btn locked" data-level="2" title="Hover (Wind)">2</button>
+                    <button class="level-btn locked" data-level="3" title="Takeoff (Calm)">3</button>
+                    <button class="level-btn locked" data-level="4" title="Takeoff (Wind)">4</button>
+                    <button class="level-btn locked" data-level="5" title="Land (Calm)">5</button>
+                    <button class="level-btn locked" data-level="6" title="Land (Wind)">6</button>
+                    <button class="level-btn locked" data-level="7" title="Altitude Change">7</button>
+                    <button class="level-btn locked" data-level="8" title="Yaw Control">8</button>
+                    <button class="level-btn locked" data-level="9" title="Fly to Point">9</button>
+                    <button class="level-btn locked" data-level="10" title="Waypoints (Calm)">10</button>
+                    <button class="level-btn locked" data-level="11" title="Waypoints (Wind)">11</button>
+                    <button class="level-btn locked" data-level="12" title="Obstacles (Calm)">12</button>
+                    <button class="level-btn locked" data-level="13" title="Obstacles (Wind)">13</button>
+                    <button class="level-btn locked" data-level="14" title="Combat Course">14</button>
+                    <button class="level-btn locked" data-level="15" title="Final Course">15</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>POST-CURRICULUM</h3>
+                <div class="button-row">
+                    <button class="btn btn-accent" id="btn-endless" title="Enter procedural endless mode after level 15">ENDLESS</button>
+                </div>
+                <div class="button-row" style="margin-top:4px">
+                    <button class="btn btn-accent btn-sm" id="btn-swarm" title="Show all training drones">SWARM</button>
+                    <button class="btn btn-danger btn-sm" id="btn-weapon" title="Arm kinetic weapon (click to fire)">ARM</button>
+                    <button class="btn btn-secondary btn-sm" id="btn-adversary" title="Toggle pursuit drone">ADVERSARY</button>
+                </div>
+                <div style="margin-top:4px">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="chk-adversary-lethal"> Lethal
+                    </label>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>RECORDINGS</h3>
+                <div class="button-row">
+                    <button class="btn btn-accent btn-sm" id="btn-rec-training" title="Record training session for replay">REC</button>
+                    <button class="btn btn-danger btn-sm" id="btn-rec-training-stop" disabled title="Stop recording">STOP</button>
+                </div>
+                <div class="recording-list" id="recording-list">
+                    <div class="rec-empty">No recordings</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 title="Simulation speed multiplier.">TRAINING SPEED</h3>
+                <div class="speed-controls">
+                    <button class="speed-btn active" data-speed="1">1x</button>
+                    <button class="speed-btn" data-speed="2">2x</button>
+                    <button class="speed-btn" data-speed="5">5x</button>
+                    <button class="speed-btn" data-speed="10">10x</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>HYPERPARAMETERS</h3>
+                <div class="slider-row">
+                    <label title="Neural network learning rate.">Learning Rate</label>
+                    <input type="range" id="sl-lr" min="-5" max="-2.5" step="0.1" value="-3.52">
+                    <span class="slider-val" id="sl-lr-val">3e-4</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Entropy coefficient — exploration vs exploitation.">Entropy Coeff</label>
+                    <input type="range" id="sl-entropy" min="0" max="0.05" step="0.002" value="0.005">
+                    <span class="slider-val" id="sl-entropy-val">0.005</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>REWARDS</h3>
+                <div class="slider-row">
+                    <label title="Reward for passing through a gate waypoint.">Waypoint</label>
+                    <input type="range" id="sl-waypoint" min="1" max="20" step="1" value="5">
+                    <span class="slider-val" id="sl-waypoint-val">5.0</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Per-step reward for closing distance to next waypoint.">Progress</label>
+                    <input type="range" id="sl-progress" min="0" max="0.2" step="0.005" value="0.05">
+                    <span class="slider-val" id="sl-progress-val">0.050</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Bonus for completing the entire course.">Course Done</label>
+                    <input type="range" id="sl-course" min="10" max="100" step="5" value="50">
+                    <span class="slider-val" id="sl-course-val">50</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Per-step reward for staying alive.">Survival</label>
+                    <input type="range" id="sl-survival" min="0" max="0.05" step="0.002" value="0.01">
+                    <span class="slider-val" id="sl-survival-val">0.010</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Bonus for approaching gates perpendicular (clean pass).">Gate Align</label>
+                    <input type="range" id="sl-gatealign" min="0" max="5" step="0.5" value="1">
+                    <span class="slider-val" id="sl-gatealign-val">1.0</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Bonus for near-miss projectile dodge.">Dodge</label>
+                    <input type="range" id="sl-dodge" min="0" max="3" step="0.1" value="0.5">
+                    <span class="slider-val" id="sl-dodge-val">0.5</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Reward for staying in the 2-8m altitude band.">Altitude</label>
+                    <input type="range" id="sl-altitude" min="0" max="0.02" step="0.001" value="0.005">
+                    <span class="slider-val" id="sl-altitude-val">0.005</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>PENALTIES</h3>
+                <div class="slider-row">
+                    <label title="Penalty for hitting an obstacle (episode ends).">Collision</label>
+                    <input type="range" id="sl-collision" min="1" max="30" step="1" value="10">
+                    <span class="slider-val" id="sl-collision-val">10.0</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Penalty for high-speed ground impact (episode ends).">Crash</label>
+                    <input type="range" id="sl-crash" min="1" max="30" step="1" value="10">
+                    <span class="slider-val" id="sl-crash-val">10.0</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Penalty for leaving course bounds (episode ends).">Out of Bounds</label>
+                    <input type="range" id="sl-oob" min="1" max="30" step="1" value="10">
+                    <span class="slider-val" id="sl-oob-val">10.0</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Penalty for being hit by a projectile (episode ends).">Proj. Hit</label>
+                    <input type="range" id="sl-projhit" min="1" max="20" step="1" value="5">
+                    <span class="slider-val" id="sl-projhit-val">5.0</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Penalty for excessive tilt and angular velocity.">Stability</label>
+                    <input type="range" id="sl-stability" min="0" max="0.05" step="0.002" value="0.01">
+                    <span class="slider-val" id="sl-stability-val">0.010</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Penalty for being inverted (upside-down).">Orientation</label>
+                    <input type="range" id="sl-orientation" min="0" max="0.05" step="0.002" value="0.01">
+                    <span class="slider-val" id="sl-orientation-val">0.010</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Penalty for high motor usage (battery drain).">Energy</label>
+                    <input type="range" id="sl-energy" min="0" max="0.01" step="0.0005" value="0.001">
+                    <span class="slider-val" id="sl-energy-val">0.001</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Penalty for jerky motor commands (sim-to-real smoothness).">Smoothness</label>
+                    <input type="range" id="sl-smoothness" min="0" max="0.02" step="0.001" value="0.005">
+                    <span class="slider-val" id="sl-smoothness-val">0.005</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Penalty for excessive speed (above 10 m/s).">Speed</label>
+                    <input type="range" id="sl-speed" min="0" max="0.01" step="0.0005" value="0.002">
+                    <span class="slider-val" id="sl-speed-val">0.002</span>
+                </div>
+                <div class="button-row" style="margin-top: 6px;">
+                    <button class="btn btn-secondary" id="btn-defaults" title="Reset all sliders to defaults.">DEFAULTS</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>POLICY METRICS</h3>
+                <div class="metric-row"><span class="metric-label">Policy Loss</span><span class="metric-val" id="m-ploss">--</span></div>
+                <div class="metric-row"><span class="metric-label">Value Loss</span><span class="metric-val" id="m-vloss">--</span></div>
+                <div class="metric-row"><span class="metric-label">Entropy</span><span class="metric-val" id="m-entropy">--</span></div>
+                <div class="metric-row"><span class="metric-label">Total Steps</span><span class="metric-val" id="m-steps">0</span></div>
+                <div class="metric-row"><span class="metric-label">Episodes</span><span class="metric-val" id="m-episodes">0</span></div>
+            </div>
+        </aside>
+
+        <!-- Center: 3D Course -->
+        <section class="arena-section">
+            <div class="arena-header">
+                <div class="mission-badge">
+                    <span class="mission-label">GEN</span>
+                    <span class="mission-val" id="gen-badge">0</span>
+                </div>
+                <div class="gate-progress">
+                    <span class="gate-label">GATES</span>
+                    <div class="gate-bar-track"><div class="gate-bar-fill" id="gate-bar"></div></div>
+                    <span class="gate-count" id="gate-count">0/0</span>
+                </div>
+                <div class="status-indicators">
+                    <span class="status-icon" id="ew-gps" title="GPS Status">GPS</span>
+                    <span class="status-icon" id="ew-jam" title="Sensor Jamming">JAM</span>
+                    <span class="status-icon" id="ew-wind" title="Wind Conditions">WIND</span>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper" id="arena-container">
+                <!-- Three.js renders here -->
+                <div class="hud-overlay">
+                    <!-- Attitude indicator -->
+                    <div class="hud-attitude" id="hud-attitude">
+                        <div class="att-horizon" id="att-horizon"></div>
+                        <div class="att-crosshair"></div>
+                    </div>
+                    <!-- Altitude bar -->
+                    <div class="hud-altitude">
+                        <span class="alt-label">ALT</span>
+                        <div class="alt-fill" id="alt-fill"></div>
+                        <span class="alt-value" id="alt-value">0m</span>
+                    </div>
+                    <!-- Motor RPMs -->
+                    <div class="hud-motors">
+                        <div class="motor-bar"><div class="motor-fill" id="motor-0"></div><span class="motor-label">FR</span></div>
+                        <div class="motor-bar"><div class="motor-fill" id="motor-1"></div><span class="motor-label">FL</span></div>
+                        <div class="motor-bar"><div class="motor-fill" id="motor-2"></div><span class="motor-label">BL</span></div>
+                        <div class="motor-bar"><div class="motor-fill" id="motor-3"></div><span class="motor-label">BR</span></div>
+                    </div>
+                    <!-- Battery -->
+                    <div class="hud-battery">
+                        <span class="battery-icon">BAT</span>
+                        <div class="battery-track"><div class="battery-fill" id="battery-fill"></div></div>
+                    </div>
+                    <!-- Endless mode HUD -->
+                    <div class="hud-endless" id="endless-hud" style="display:none">
+                        <span class="endless-label" id="endless-scenario">#1</span>
+                        <span class="endless-diff" id="endless-difficulty">D=1.00</span>
+                        <span class="endless-streak-label">STREAK <span id="endless-streak">0</span></span>
+                        <span class="endless-best-label">BEST <span id="endless-best">0</span></span>
+                    </div>
+                    <!-- Weapon stats -->
+                    <div class="hud-weapon" id="weapon-stats" style="display:none">
+                        <span class="weapon-label">WEAPON</span>
+                        <span><span id="weapon-hits">0</span>/<span id="weapon-shots">0</span></span>
+                        <span id="weapon-accuracy">0%</span>
+                    </div>
+                    <!-- Bandit alert -->
+                    <div class="bandit-alert" id="bandit-alert">BANDIT</div>
+                    <!-- Threat warning border -->
+                    <div class="threat-warning" id="threat-warning"></div>
+                </div>
+            </div>
+
+            <div class="arena-footer">
+                <span class="step-info">STEP <span id="step-counter">0</span> / <span id="step-max">1000</span></span>
+                <span class="episode-info">EP <span id="episode-counter">0</span></span>
+                <div class="conn-status" id="conn-status">CONNECTING...</div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Analytics -->
+        <aside class="panel panel-right">
+            <div class="panel-header">
+                <h2>ANALYTICS</h2>
+                <span class="panel-tag">LIVE</span>
+            </div>
+
+            <div class="section">
+                <h3>EPISODE REWARD</h3>
+                <canvas id="chart-reward" height="90"></canvas>
+            </div>
+
+            <div class="section">
+                <h3>GATE RATE</h3>
+                <canvas id="chart-gates" height="75"></canvas>
+            </div>
+
+            <div class="section">
+                <h3>COMPLETION RATE</h3>
+                <canvas id="chart-completion" height="75"></canvas>
+            </div>
+
+            <div class="section">
+                <h3>RECENT EPISODES</h3>
+                <div class="episode-log" id="episode-log"></div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- Replay Bar (shown during recording playback) -->
+    <div id="replay-bar" class="replay-bar" style="display:none">
+        <span class="replay-badge" id="replay-badge">&#9654; REPLAY</span>
+        <span class="replay-name" id="replay-name"></span>
+        <input type="range" id="replay-seek" class="replay-seek" min="0" max="1" step="0.001" value="0">
+        <span class="replay-gen" id="replay-gen">Gen 0</span>
+        <select id="replay-speed" class="replay-speed-select">
+            <option value="10">10&times;</option>
+            <option value="25">25&times;</option>
+            <option value="50" selected>50&times;</option>
+            <option value="100">100&times;</option>
+            <option value="200">200&times;</option>
+        </select>
+        <button class="btn btn-sm replay-btn" id="replay-pause-btn">&#9208;</button>
+        <button class="btn btn-sm btn-danger replay-btn" id="replay-stop-btn">&#10005; EXIT</button>
+    </div>
+
+    <!-- Three.js from CDN -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module" src="js/arena.js?v=10"></script>
+    <script src="js/charts.js?v=10"></script>
+    <script type="module" src="js/app.js?v=10"></script>
+
+    <!-- Demo guide widget -->
+    <script src="/shared/demo-guide.js" data-demo-id="deeprl"></script>
+</body>
+</html>

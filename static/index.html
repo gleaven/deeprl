@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/deeprl/">
+    <title>DEEPRL // Deep Reinforcement Learning Arena</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/deeprl.css">
+</head>
+<body>
+
+    <!-- Animated Background -->
+    <div class="cyber-bg">
+        <div class="grid-overlay"></div>
+        <div class="scan-line"></div>
+    </div>
+
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="brand">
+            <span class="status-dot" id="status-dot"></span>
+            <span class="logo-text" data-text="DEEPRL">DEEPRL</span>
+            <span class="subtitle">REINFORCEMENT LEARNING ARENA</span>
+        </div>
+        <div class="header-stats">
+            <div class="stat-badge">
+                <span class="stat-label">GEN</span>
+                <span class="stat-value" id="hdr-generation">0</span>
+            </div>
+            <div class="stat-badge">
+                <span class="stat-label">EPISODE</span>
+                <span class="stat-value" id="hdr-episode">0</span>
+            </div>
+            <div class="stat-badge">
+                <span class="stat-label">WIN RATE</span>
+                <span class="stat-value" id="hdr-winrate">--</span>
+            </div>
+            <div class="gpu-inline-bar">
+                <span class="gpu-label"><span class="gpu-pulse"></span>GPU</span>
+                <div class="gpu-track"><div class="gpu-fill" id="gpu-bar"></div></div>
+                <span class="gpu-value" id="gpu-pct">--%</span>
+            </div>
+            <a href="/deeprl/drone/" style="font-family:var(--font-display);font-size:0.45rem;letter-spacing:0.1em;padding:0.25rem 0.5rem;background:rgba(255,153,0,0.1);border:1px solid rgba(255,153,0,0.3);color:#ff9900;cursor:pointer;transition:all 0.2s;text-decoration:none;">DRONE</a>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <main class="app-layout">
+
+        <!-- Left Panel: Training Controls -->
+        <aside class="panel panel-left">
+            <div class="panel-header">
+                <h2>TRAINING</h2>
+                <span class="panel-tag">PPO</span>
+            </div>
+
+            <div class="section">
+                <h3>CONTROLS</h3>
+                <div class="button-row">
+                    <button class="btn btn-primary" id="btn-start" title="Start or resume PPO training.">START</button>
+                    <button class="btn btn-danger" id="btn-stop" title="Pause training. Agents freeze in place.">PAUSE</button>
+                    <button class="btn btn-secondary" id="btn-reset" title="Reset to a random untrained policy. All learned behavior is lost.">RESET</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>CHECKPOINTS</h3>
+                <div class="checkpoint-save-row">
+                    <input type="text" id="ckpt-name" class="ckpt-input"
+                           placeholder="checkpoint name" maxlength="40">
+                    <button class="btn btn-primary btn-sm" id="btn-save-ckpt" title="Save current model as a named checkpoint. Max 10 checkpoints.">SAVE</button>
+                </div>
+                <div class="checkpoint-list" id="checkpoint-list">
+                    <div class="ckpt-empty">No saved checkpoints</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>TEAM SIZE</h3>
+                <div class="speed-controls">
+                    <button class="team-btn active" data-ppt="1" title="One agent per team. Simpler problem, faster learning.">1v1</button>
+                    <button class="team-btn" data-ppt="2" title="Two agents per team. Requires learning coordination. Resets training.">2v2</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>EPISODE</h3>
+                <div class="slider-row">
+                    <label title="Maximum physics timesteps before the episode ends. Higher = longer matches, more time to score. Also sets the PPO rollout length.">Max Steps</label>
+                    <input type="range" id="sl-maxsteps" min="200" max="2000" step="50" value="500">
+                    <span class="slider-val" id="sl-maxsteps-val">500</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Number of goals needed to win and end the episode. 1 = sudden death (first goal wins). Higher values allow comebacks.">Goals to Win</label>
+                    <input type="range" id="sl-maxgoals" min="1" max="5" step="1" value="1">
+                    <span class="slider-val" id="sl-maxgoals-val">1</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 title="Simulation speed multiplier. Higher = faster training but choppier visualization.">TRAINING SPEED</h3>
+                <div class="speed-controls">
+                    <button class="speed-btn active" data-speed="1">1x</button>
+                    <button class="speed-btn" data-speed="2">2x</button>
+                    <button class="speed-btn" data-speed="5">5x</button>
+                    <button class="speed-btn" data-speed="10">10x</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>HYPERPARAMETERS</h3>
+                <div class="slider-row">
+                    <label title="How fast the neural network adjusts its weights each update. Too high = unstable, too low = slow learning.">Learning Rate</label>
+                    <input type="range" id="sl-lr" min="-5" max="-2.5" step="0.1" value="-3.52">
+                    <span class="slider-val" id="sl-lr-val">3e-4</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Encourages exploration by rewarding uncertainty in actions. Higher = more random exploration, lower = more exploitation of learned behavior.">Entropy Coeff</label>
+                    <input type="range" id="sl-entropy" min="0" max="0.05" step="0.002" value="0.01">
+                    <span class="slider-val" id="sl-entropy-val">0.010</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>REWARDS</h3>
+                <div class="slider-row">
+                    <label title="Reward for scoring a goal (and equal penalty for conceding). The dominant learning signal. Higher = agents prioritize scoring above all else.">Goal</label>
+                    <input type="range" id="sl-goal" min="1" max="20" step="1" value="10">
+                    <span class="slider-val" id="sl-goal-val">10.0</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Small reward each step for moving closer to the ball. Teaches agents to chase the ball early in training.">Approach Ball</label>
+                    <input type="range" id="sl-approach" min="0" max="0.1" step="0.005" value="0.02">
+                    <span class="slider-val" id="sl-approach-val">0.020</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Reward when the ball moves toward the opponent's goal. Teaches agents to kick with purpose, not just make contact.">Ball &rarr; Goal</label>
+                    <input type="range" id="sl-ballgoal" min="0" max="0.2" step="0.005" value="0.05">
+                    <span class="slider-val" id="sl-ballgoal-val">0.050</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Reward for making contact with the ball (kicking). Bridges the gap between approaching and directing.">Kick Ball</label>
+                    <input type="range" id="sl-kick" min="0" max="0.5" step="0.01" value="0.1">
+                    <span class="slider-val" id="sl-kick-val">0.100</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Reward for dribbling: moving with the ball under close control (within 1.2m). Encourages controlled ball handling over long kicks.">Dribble</label>
+                    <input type="range" id="sl-dribble" min="0" max="0.3" step="0.005" value="0.08">
+                    <span class="slider-val" id="sl-dribble-val">0.080</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Small per-step reward for having the ball nearby (within 2m). Encourages maintaining possession rather than booting the ball away.">Possession</label>
+                    <input type="range" id="sl-possession" min="0" max="0.05" step="0.002" value="0.01">
+                    <span class="slider-val" id="sl-possession-val">0.010</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Reward for juking: changing direction sharply while possessing ball near an opponent. Encourages skillful evasion and fakes.">Juke</label>
+                    <input type="range" id="sl-juke" min="0" max="0.5" step="0.01" value="0.12">
+                    <span class="slider-val" id="sl-juke-val">0.120</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>PENALTIES</h3>
+                <div class="slider-row">
+                    <label title="Penalty applied to all agents when the episode times out as a draw. Motivates agents to score rather than play passively.">Draw</label>
+                    <input type="range" id="sl-draw" min="0" max="10" step="0.5" value="3.0">
+                    <span class="slider-val" id="sl-draw-val">3.0</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Small penalty proportional to movement force. Prevents agents from flailing randomly and encourages efficient movement.">Energy</label>
+                    <input type="range" id="sl-energy" min="0" max="0.02" step="0.001" value="0.003">
+                    <span class="slider-val" id="sl-energy-val">0.003</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Penalty for running into field walls. Teaches agents to stay in the playable area.">Wall</label>
+                    <input type="range" id="sl-wall" min="0" max="0.2" step="0.005" value="0.02">
+                    <span class="slider-val" id="sl-wall-val">0.020</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Penalty when the ball is within 3m of a field corner. Discourages trapping the ball in dead zones.">Corner Ball</label>
+                    <input type="range" id="sl-corner" min="0" max="0.2" step="0.005" value="0.03">
+                    <span class="slider-val" id="sl-corner-val">0.030</span>
+                </div>
+                <div class="slider-row">
+                    <label title="Penalty when ball is within 1.5m of any wall. Keeps play in the center of the field and prevents wall-pinning strategies.">Ball Wall</label>
+                    <input type="range" id="sl-ballwall" min="0" max="0.3" step="0.005" value="0.05">
+                    <span class="slider-val" id="sl-ballwall-val">0.050</span>
+                </div>
+                <div class="button-row" style="margin-top: 6px;">
+                    <button class="btn btn-secondary" id="btn-defaults" title="Reset all sliders to their default values.">DEFAULTS</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>POLICY METRICS</h3>
+                <div class="metric-row"><span class="metric-label" title="PPO clipped surrogate loss. Should decrease over time as policy improves. Spikes indicate the policy changed significantly.">Policy Loss</span><span class="metric-val" id="m-ploss">--</span></div>
+                <div class="metric-row"><span class="metric-label" title="How well the critic predicts future rewards. Lower = better value estimates. Helps the agent judge which situations are good.">Value Loss</span><span class="metric-val" id="m-vloss">--</span></div>
+                <div class="metric-row"><span class="metric-label" title="Randomness in the policy's actions. High = exploring, low = exploiting. Should gradually decrease as the agent learns.">Entropy</span><span class="metric-val" id="m-entropy">--</span></div>
+                <div class="metric-row"><span class="metric-label" title="Total environment steps across all 64 parallel environments.">Total Steps</span><span class="metric-val" id="m-steps">0</span></div>
+                <div class="metric-row"><span class="metric-label" title="Number of completed episodes on the displayed match (env 0).">Episodes</span><span class="metric-val" id="m-episodes">0</span></div>
+            </div>
+        </aside>
+
+        <!-- Center: 3D Arena -->
+        <section class="arena-section">
+            <div class="arena-header">
+                <div class="team-score team-cyan">
+                    <span class="team-name">CYAN</span>
+                    <span class="score-num" id="score-cyan">0</span>
+                </div>
+                <div class="generation-badge">
+                    <span class="gen-label">GEN</span>
+                    <span class="gen-num" id="gen-badge">0</span>
+                </div>
+                <div class="team-score team-magenta">
+                    <span class="score-num" id="score-magenta">0</span>
+                    <span class="team-name">MAGENTA</span>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper" id="arena-container">
+                <!-- Three.js renders here -->
+                <div class="goal-celebration" id="goal-celebration" hidden>
+                    <span class="goal-text">GOAL!</span>
+                </div>
+            </div>
+
+            <div class="arena-footer">
+                <span class="step-info">STEP <span id="step-counter">0</span> / <span id="step-max">500</span></span>
+                <span class="episode-info">EP <span id="episode-counter">0</span></span>
+                <div class="conn-status" id="conn-status">CONNECTING...</div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Analytics -->
+        <aside class="panel panel-right">
+            <div class="panel-header">
+                <h2>ANALYTICS</h2>
+                <span class="panel-tag">LIVE</span>
+            </div>
+
+            <div class="section">
+                <h3>EPISODE REWARD</h3>
+                <canvas id="chart-reward" height="90"></canvas>
+            </div>
+
+            <div class="section">
+                <h3>WIN RATE</h3>
+                <canvas id="chart-winrate" height="75"></canvas>
+            </div>
+
+            <div class="section">
+                <h3>GOALS / EPISODE</h3>
+                <canvas id="chart-goals" height="75"></canvas>
+            </div>
+
+            <div class="section">
+                <h3>RECENT EPISODES</h3>
+                <div class="episode-log" id="episode-log"></div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- Three.js from CDN -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module" src="js/arena.js"></script>
+    <script src="js/charts.js"></script>
+    <script type="module" src="js/app.js"></script>
+
+    <!-- Demo guide widget -->
+    <script src="/shared/demo-guide.js" data-demo-id="deeprl"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+services:
+  deeprl:
+    build: .
+    container_name: demo-deeprl
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - TORCH_CUDA_ARCH_LIST=12.1
+      - REDIS_URL=${REDIS_URL:-redis://demo-redis:6379/10}
+      - N_ENVS=${N_ENVS:-256}
+      - TRAINING_SPEED=${TRAINING_SPEED:-1}
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+
+  # ── Bundled dependencies ──
+  redis:
+    image: redis:7-alpine
+    container_name: demo-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:6379"
+    volumes:
+      - deeprl-redis-data:/data
+    command: redis-server --appendonly yes --databases 20
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional HTTPS reverse proxy (--profile proxy).
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["proxy"]
+    container_name: deeprl-caddy
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8081}:80"
+      - "${HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - deeprl-caddy-data:/data
+      - deeprl-caddy-config:/config
+    depends_on:
+      - deeprl
+
+volumes:
+  deeprl-redis-data:
+  deeprl-caddy-data:
+  deeprl-caddy-config:
