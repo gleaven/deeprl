@@ -82,7 +82,7 @@
     // ── WebSocket ─────────────────────────────────────────────
     function _connect() {
         const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-        const url = `${proto}://${location.host}/deeprl/ws/course`;
+        const url = `${proto}://${location.host}/ws/course`;
 
         ws = new WebSocket(url);
 
@@ -465,7 +465,7 @@
             btn.addEventListener('click', () => {
                 const name = btn.closest('.rec-row').dataset.name;
                 if (confirm(`Delete recording "${name}"?`)) {
-                    fetch('/deeprl/api/drone/recordings/delete', {
+                    fetch('/api/drone/recordings/delete', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name }),
@@ -560,20 +560,20 @@
     // ── Controls ──────────────────────────────────────────────
     function _initControls() {
         _on('btn-start', 'click', () => {
-            fetch('/deeprl/api/drone/training/start', { method: 'POST' });
+            fetch('/api/drone/training/start', { method: 'POST' });
             watchMode = false;
             _updateTrainingButtons(true, false);
         });
 
         _on('btn-stop', 'click', () => {
-            fetch('/deeprl/api/drone/training/stop', { method: 'POST' });
+            fetch('/api/drone/training/stop', { method: 'POST' });
             watchMode = false;
             _updateTrainingButtons(false, false);
         });
 
         _on('btn-reset', 'click', () => {
             if (confirm('Reset training? All learned behavior will be lost.')) {
-                fetch('/deeprl/api/drone/training/reset', { method: 'POST' });
+                fetch('/api/drone/training/reset', { method: 'POST' });
                 watchMode = false;
                 _updateTrainingButtons(true, false);
             }
@@ -767,7 +767,7 @@
         _on('btn-pretrain', 'click', () => {
             if (demoList.length === 0) return;
             const names = demoList.map(d => d.name);
-            fetch('/deeprl/api/drone/pretrain', {
+            fetch('/api/drone/pretrain', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ demos: names, epochs: 50 }),
@@ -775,7 +775,7 @@
         });
 
         // Fetch demo list on load
-        fetch('/deeprl/api/drone/demos').then(r => r.json()).then(data => {
+        fetch('/api/drone/demos').then(r => r.json()).then(data => {
             if (Array.isArray(data)) {
                 demoList = data;
                 _renderDemoList();
@@ -794,7 +794,7 @@
         }
 
         // Fetch checkpoint list on load
-        fetch('/deeprl/api/drone/checkpoints').then(r => r.json()).then(data => {
+        fetch('/api/drone/checkpoints').then(r => r.json()).then(data => {
             if (Array.isArray(data)) {
                 checkpointList = data;
                 _renderCheckpointList();
@@ -897,7 +897,7 @@
         _on('btn-rec-training', 'click', () => {
             const btn = document.getElementById('btn-rec-training');
             const stopBtn = document.getElementById('btn-rec-training-stop');
-            fetch('/deeprl/api/drone/recordings/start', {
+            fetch('/api/drone/recordings/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: '' }),
@@ -910,13 +910,13 @@
         _on('btn-rec-training-stop', 'click', () => {
             const btn = document.getElementById('btn-rec-training');
             const stopBtn = document.getElementById('btn-rec-training-stop');
-            fetch('/deeprl/api/drone/recordings/stop', { method: 'POST' });
+            fetch('/api/drone/recordings/stop', { method: 'POST' });
             if (btn) { btn.disabled = false; btn.classList.remove('rec-training-active'); }
             if (stopBtn) stopBtn.disabled = true;
         });
 
         // Fetch recordings on load
-        fetch('/deeprl/api/drone/recordings').then(r => r.json()).then(data => {
+        fetch('/api/drone/recordings').then(r => r.json()).then(data => {
             if (Array.isArray(data)) {
                 recordingList = data;
                 _renderRecordingList();
@@ -968,7 +968,7 @@
     // ── GPU Polling ───────────────────────────────────────────
     async function _pollGPU() {
         try {
-            const r = await fetch('/deeprl/api/system/stats');
+            const r = await fetch('/api/system/stats');
             const d = await r.json();
             const pct = d.gpu_percent || 0;
             const bar = document.getElementById('gpu-bar');
@@ -1032,7 +1032,7 @@
         const name = (input ? input.value.trim() : '');
         if (!name) return;
         try {
-            const r = await fetch('/deeprl/api/drone/checkpoints/save', {
+            const r = await fetch('/api/drone/checkpoints/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name }),
@@ -1050,7 +1050,7 @@
 
     async function _loadCheckpoint(name, mode) {
         try {
-            const r = await fetch('/deeprl/api/drone/checkpoints/load', {
+            const r = await fetch('/api/drone/checkpoints/load', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, mode }),
@@ -1064,7 +1064,7 @@
 
     async function _deleteCheckpoint(name) {
         try {
-            const r = await fetch('/deeprl/api/drone/checkpoints/delete', {
+            const r = await fetch('/api/drone/checkpoints/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name }),

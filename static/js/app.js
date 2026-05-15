@@ -31,7 +31,7 @@
     // ── WebSocket ─────────────────────────────────────────────
     function _connect() {
         const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-        const url = `${proto}://${location.host}/deeprl/ws/arena`;
+        const url = `${proto}://${location.host}/ws/arena`;
 
         ws = new WebSocket(url);
 
