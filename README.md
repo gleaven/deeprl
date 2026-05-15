@@ -1,26 +1,45 @@
-# DEEPRL — Live PPO 2v2 Soccer
+# DEEPRL — Live PPO: Soccer Arena + Drone Course
 
-> Watch 256 parallel matches train simultaneously on your local GPU.
-> Agents learn 2v2 soccer from scratch with PPO, fully visualised in 3D.
+> Two reinforcement-learning scenarios training side by side on your
+> local GPU, fully visualised in 3D.
 
 ## Overview
 
-A live demonstration of deep reinforcement learning where AI agents
-learn to play 2v2 soccer entirely from scratch. 256 parallel matches
-train simultaneously on the GPU using Proximal Policy Optimization
-(PPO), generating thousands of experiences per second. Watch the 3D
-arena in real time as agents evolve from random flailing to emergent
-behaviours — positioning, passing, goalkeeping, team coordination — all
-discovered through trial and error with no human-programmed strategy.
-Adjust hyperparameters, reward-shaping weights, and training speed
-through live controls.
+A live demonstration of deep reinforcement learning. Two independent
+PPO trainers run side by side — one learning **2v2 soccer**, one
+learning **quadrotor flight** — each with 256 parallel environments on
+the GPU. Watch them in 3D, in real time, as policies evolve from random
+flailing to coherent behaviour. All discovered through trial and error
+with no human-programmed strategy. Adjust hyperparameters,
+reward-shaping weights, and training speed through live controls.
+
+### Scenario 1 — Soccer Arena (2v2)
+
+Agents learn to play 2v2 soccer from scratch using self-play (the same
+policy controls both teams). 256 parallel matches generate thousands of
+experiences per second. Emergent behaviours appear over training:
+positioning, passing, goalkeeping, team coordination — none of it
+hand-coded.
+
+### Scenario 2 — Drone Course (Quadrotor Flight)
+
+A 250mm X-config racing quadrotor learns to fly under realistic
+Newton-Euler physics (parameters scaled from Crazyflie 2.x; MIL-F-8785C
+Dryden turbulence wind model). A curriculum of progressively harder
+levels takes the policy from **stable hover → takeoff → landing →
+altitude / yaw control → fly-to-waypoint → gate-racing courses**. Motor
+dynamics, aerodynamic drag, and rotor inertia are all simulated, so the
+learned controller has to deal with the same kind of disturbances a
+real quad would face.
 
 ## Capabilities
 
-- 256 parallel environments on a single GPU.
-- Live 3D arena (Three.js) with bloom effects.
-- Real-time PPO with adjustable hyperparameters.
-- Self-play: same policy plays both teams.
+- Two PPO trainers (soccer + drone) running side by side on one GPU.
+- 256 parallel environments per scenario.
+- Live 3D viewers (Three.js) with bloom effects for both scenarios.
+- Real-time PPO with adjustable hyperparameters and reward weights.
+- Self-play for soccer; curriculum learning for drone.
+- Realistic quadrotor physics (Crazyflie-scaled, with wind).
 
 ## Requirements
 
