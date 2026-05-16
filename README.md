@@ -440,3 +440,30 @@ The simplest patch is to comment out the trainer init in `server.py`.
 ## Credits
 
 Built by Andrew Meinecke.
+
+## Components & Licensing
+
+This demo is released under Apache License 2.0. It bundles or wraps
+the following third-party components, each retaining its own license:
+
+| Component | License | Use in this demo |
+|---|---|---|
+| [PyTorch](https://github.com/pytorch/pytorch) 2.9.1 + CUDA 13 | BSD-3 | Policy / value network, GPU autodiff for PPO updates |
+| [NumPy](https://github.com/numpy/numpy) | BSD-3 | Vectorised environment math (256 parallel worlds) |
+| [FastAPI](https://github.com/fastapi/fastapi) | MIT | HTTP + WebSocket server |
+| [Uvicorn](https://github.com/encode/uvicorn) | BSD-3 | ASGI server |
+| [Redis](https://github.com/redis/redis) (bundled `redis:7-alpine`) | RSALv2 / SSPLv1 (dual) | Training-state persistence (checkpoints, metrics, episode history) |
+| [Three.js](https://github.com/mrdoob/three.js/) (bundled in `static/` and `static-drone/`) | MIT | 3D soccer arena + drone-course viewers |
+| [NVIDIA CUDA base image](https://hub.docker.com/r/nvidia/cuda) (`nvidia/cuda:13.0.0-devel-ubuntu22.04`) | NVIDIA Deep Learning Container Software License | GPU runtime |
+
+The PPO implementation (`ppo.py`), soccer arena (`environment.py`),
+drone course (`drone_environment.py`), and replay recorder
+(`recorder.py`) are written from scratch for this demo with no
+external RL-library dependency.
+
+### License notes
+
+Redis 7.4+ uses the dual RSALv2 / SSPLv1 license; the RSALv2 path
+covers normal use. The NVIDIA CUDA base image is governed by NVIDIA's
+Deep Learning Container Software License — read it before
+redistributing the built image.
